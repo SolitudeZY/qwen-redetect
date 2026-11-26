@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>识别记录管理</title>
+    <style>
+        :root {
+            --bg: #f2f3f5;
+            --surface: #ffffff;
+            --surface-alt: #f8f9fb;
+            --border: #e5e7eb;
+            --border-strong: #d7dae0;
+            --text: #1f2430;
+            --text-secondary: #6b7280;
+            --text-muted: #9aa1ac;
+            --primary: #232a3d;
+            --primary-hover: #171c2a;
+            --success: #2f6f4e;
+            --success-hover: #255a3f;
+            --danger: #b3261e;
+            --danger-bg: #fdecea;
+            --warning: #b7791f;
+            --warning-bg: #fbf1e0;
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+            --shadow-sm: 0 1px 2px rgba(16, 24, 40, .04);
+            --shadow-md: 0 12px 32px rgba(16, 24, 40, .10);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 32px 20px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+        }
+
+        .header {
+            background: var(--primary);
+            padding: 32px 40px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 22px;
+            font-weight: 600;
+            letter-spacing: .3px;
+            margin-bottom: 6px;
+        }
+
+        .header p {
+            color: rgba(255, 255, 255, .6);
+            font-size: 13px;
+        }
+
+        .content {
+            padding: 32px 40px;
+        }
+
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 9px 20px;
+            border: 1px solid transparent;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 13.5px;
+            font-weight: 500;
+            transition: background .15s ease, border-color .15s ease, color .15s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: var(--success-hover);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: var(--text-secondary);
+            border-color: var(--border-strong);
+        }
+
+        .btn-secondary:hover {
+            background: var(--surface-alt);
+        }
+
+        .filter-section {
+            background: var(--surface-alt);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 22px 24px;
+            margin-bottom: 28px;
+        }
+
+        .filter-title {
+            font-size: 12.5px;
+            font-weight: 600;
+            letter-spacing: .5px;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-size: 12.5px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 9px 12px;
+            border: 1px solid var(--border-strong);
+            border-radius: var(--radius-sm);
+            font-size: 13.5px;
+            background: white;
+            color: var(--text);
+            transition: border-color .15s ease, box-shadow .15s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(35, 42, 61, .08);
+        }
+
+        .searchable-select {
+            position: relative;
+        }
+
+        .searchable-select input {
+            width: 100%;
+            box-sizing: border-box;
+            padding-right: 32px;
+        }
+
+        .searchable-select::after {
+            content: '▾';
+            position: absolute;
+            top: 50%;
+            right: 12px;
+            color: var(--text-muted);
+            pointer-events: none;
+            transform: translateY(-50%);
+        }
+
+        .searchable-select-native {
+            display: none;
+        }
+
+        .searchable-select-options {
+            display: none;
+            position: absolute;
+            z-index: 40;
+            top: calc(100% + 4px);
+            left: 0;
+            right: 0;
+            max-height: 240px;
+            overflow-y: auto;
+            padding: 4px;
+            border: 1px solid var(--border-strong);
+            border-radius: var(--radius-sm);
+            background: white;
+            box-shadow: var(--shadow-md);
+        }
+
+        .searchable-select.open .searchable-select-options {
+            display: block;
+        }
+
+        .searchable-select-option,
+        .searchable-select-empty {
+            padding: 8px 10px;
+            border-radius: 4px;
+            font-size: 13.5px;
+        }
+
+        .searchable-select-option {
+            cursor: pointer;
+        }
+
+        .searchable-select-option:hover,
+        .searchable-select-option.selected {
+            background: var(--surface-alt);
+        }
+
+        .searchable-select-empty {
+            color: var(--text-muted);
+        }
+
+        .table-container {
+            overflow-x: auto;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        th {
+            background: var(--surface-alt);
+            color: var(--text-secondary);
+            padding: 12px 14px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 13px 14px;
+            border-bottom: 1px solid var(--border);
+            font-size: 13.5px;
+            color: var(--text);
+        }
+
+        tr:hover td {
+            background: var(--surface-alt);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 3px 11px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-warning {
+            background: var(--warning-bg);
+            color: var(--warning);
+        }
+
+        .status-normal {
+            background: #eaf6ef;
+            color: #1f8a4c;
+        }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .pagination button {
+            padding: 8px 16px;
+            border: 1px solid var(--border-strong);
+            background: white;
+            color: var(--text);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 13px;
+            transition: border-color .15s ease, color .15s ease;
+        }
+
+        .pagination button:hover:not(:disabled) {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .pagination button:disabled {
+            opacity: .45;
+            cursor: not-allowed;
+        }
+
+        .pagination .current-page {
+            font-weight: 500;
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 16px;
+            opacity: .5;
+        }
+
+        .preview-image {
+            width: 160px;
+            height: 110px;
+            object-fit: contain;
+            display: block;
+            background: var(--surface-alt);
+            cursor: pointer;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            transition: transform .15s ease;
+        }
+
+        .preview-image:hover {
+            transform: scale(1.04);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 18, 25, .55);
+            backdrop-filter: blur(2px);
+            animation: fadeIn .2s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .modal-content {
+            background: white;
+            margin: 50px auto;
+            padding: 0;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            max-width: 800px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-md);
+            animation: slideDown .2s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            background: var(--primary);
+            color: white;
+            padding: 20px 28px;
+            border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            font-size: 17px;
+            font-weight: 600;
+        }
+
+        .close {
+            color: white;
+            font-size: 22px;
+            font-weight: 300;
+            cursor: pointer;
+            opacity: .7;
+            transition: opacity .15s ease;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .close:hover {
+            opacity: 1;
+            background: rgba(255, 255, 255, .12);
+        }
+
+        .modal-body {
+            padding: 28px;
+        }
+
+        .image-preview-container {
+            text-align: center;
+        }
+
+        .full-image {
+            display: block;
+            width: auto;
+            height: auto;
+            max-width: 100%;
+            max-height: 70vh;
+            object-fit: contain;
+            margin: 0 auto;
+            border-radius: var(--radius-sm);
+        }
+
+        .image-actions {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 18px;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .filter-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-content {
+                width: 95%;
+                margin: 20px auto;
+            }
+
+            .table-container {
+                font-size: 12px;
+            }
+
+            th, td {
+                padding: 10px 8px;
+            }
+
+            .preview-image {
+                width: 100px;
+                height: 80px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>识别记录管理</h1>
+        <p>查看和管理所有摄像头的AI识别记录</p>
+    </div>
+
+    <div class="content">
+        <div class="toolbar">
+            <button class="btn btn-secondary" onclick="exportRecognitionRecords()">导出记录</button>
+            <div class="actions">
+                <a href="/image-detection" class="btn btn-secondary">上传图片检测</a>
+                <a href="/" class="btn btn-success">摄像头配置管理</a>
+            </div>
+        </div>
+        <!-- 过滤器区域 -->
+        <div class="filter-section">
+            <div class="filter-title">筛选条件</div>
+            <div class="filter-grid">
+                <div class="form-group">
+                    <label for="filter-start-time">开始时间</label>
+                    <input type="datetime-local" id="filter-start-time">
+                </div>
+                <div class="form-group">
+                    <label for="filter-end-time">结束时间</label>
+                    <input type="datetime-local" id="filter-end-time">
+                </div>
+                <div class="form-group">
+                    <label for="filter-camera">设备筛选</label>
+                    <select id="filter-camera" class="searchable-filter">
+                        <option value="">全部设备</option>
+                        {{range .Cameras}}
+                        <option value="{{.ID}}">{{.SerialNo}} {{.Name}}</option>
+                        {{end}}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="filter-group">分组筛选</label>
+                    <select id="filter-group" class="searchable-filter">
+                        <option value="">全部分组</option>
+                        {{range .Groups}}
+                        <option value="{{.}}">{{.}}</option>
+                        {{end}}
+                    </select>
+                </div>
+                <div class="form-group" style="justify-content: flex-end; flex-direction: row; gap: 12px;">
+                    <button class="btn btn-primary" onclick="applyFilter()">应用筛选</button>
+                    <button class="btn btn-secondary" onclick="resetFilter()">重置</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 记录列表 -->
+        <div class="table-container">
+            <table>
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>设备名称</th>
+                    <th>识别时间</th>
+                    <th>大模型复核</th>
+                    <th>审核状态</th>
+                    <th>大模型诊断结果</th>
+                    <th>图片</th>
+                    <th>操作</th>
+                </tr>
+                </thead>
+                <tbody id="records-table-body">
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 分页 -->
+        <div class="pagination" id="pagination">
+            <button id="prev-page">上一页</button>
+            <span class="current-page"></span>
+            <button id="next-page">下一页</button>
+        </div>
+    </div>
+</div>
+
+<!-- 图片查看模态框 -->
+<div id="imageModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>图片预览</h2>
+            <span class="close" onclick="closeImageModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div class="image-preview-container">
+                <img id="fullImage" class="full-image" src="" alt="完整图片">
+                <div class="image-actions">
+                    <a id="viewOriginal" class="btn btn-secondary" href="#" target="_blank" rel="noopener">查看原图</a>
+                    <a id="downloadOriginal" class="btn btn-primary" href="#">下载原图</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 全局变量
+    let currentPage = 1;
+    let totalPages = 1;
+
+    const searchableSelects = new Map();
+
+    function initSearchableSelect(select) {
+        const label = select.previousElementSibling;
+        const wrapper = document.createElement('div');
+        wrapper.className = 'searchable-select';
+        select.parentNode.insertBefore(wrapper, select);
+        wrapper.appendChild(select);
+        select.classList.add('searchable-select-native');
+
+        const input = document.createElement('input');
+        input.type = 'search';
+        input.id = `${select.id}-search`;
+        input.autocomplete = 'off';
+        input.setAttribute('aria-label', label?.textContent || '筛选');
+        input.setAttribute('aria-haspopup', 'listbox');
+        if (label) label.setAttribute('for', input.id);
+
+        const optionsPanel = document.createElement('div');
+        optionsPanel.className = 'searchable-select-options';
+        optionsPanel.setAttribute('role', 'listbox');
+        wrapper.append(input, optionsPanel);
+
+        const options = Array.from(select.options);
+        let visibleOptions = options;
+
+        function syncInput() {
+            const selected = options.find(option => option.value === select.value);
+            input.value = selected ? selected.textContent.trim() : '';
+        }
+
+        function closeOptions() {
+            wrapper.classList.remove('open');
+            input.setAttribute('aria-expanded', 'false');
+            syncInput();
+        }
+
+        function chooseOption(option) {
+            select.value = option.value;
+            select.dispatchEvent(new Event('change', {bubbles: true}));
+            closeOptions();
+        }
+
+        function renderOptions(query = '') {
+            const keyword = query.trim().toLocaleLowerCase();
+            const matches = options.filter(option =>
+                !keyword || option.textContent.toLocaleLowerCase().includes(keyword)
+            );
+            visibleOptions = matches;
+
+            optionsPanel.innerHTML = '';
+            matches.forEach(option => {
+                const item = document.createElement('div');
+                item.className = 'searchable-select-option';
+                if (option.value === select.value) item.classList.add('selected');
+                item.setAttribute('role', 'option');
+                item.textContent = option.textContent.trim();
+                item.addEventListener('mousedown', event => event.preventDefault());
+                item.addEventListener('click', () => chooseOption(option));
+                optionsPanel.appendChild(item);
+            });
+
+            if (matches.length === 0) {
+                const empty = document.createElement('div');
+                empty.className = 'searchable-select-empty';
+                empty.textContent = '无匹配选项';
+                optionsPanel.appendChild(empty);
+            }
+        }
+
+        function openOptions(showAll = false) {
+            renderOptions(showAll ? '' : input.value);
+            wrapper.classList.add('open');
+            input.setAttribute('aria-expanded', 'true');
+        }
+
+        input.addEventListener('focus', () => {
+            input.select();
+            openOptions(true);
+        });
+        input.addEventListener('input', () => {
+            select.value = '';
+            openOptions();
+        });
+        input.addEventListener('keydown', event => {
+            if (event.key === 'Enter' && wrapper.classList.contains('open') && visibleOptions.length > 0) {
+                event.preventDefault();
+                chooseOption(visibleOptions[0]);
+                return;
+            }
+            if (event.key === 'Escape') {
+                closeOptions();
+                input.blur();
+            }
+        });
+        document.addEventListener('mousedown', event => {
+            if (!wrapper.contains(event.target)) closeOptions();
+        });
+
+        searchableSelects.set(select.id, {
+            setValue(value) {
+                select.value = value;
+                syncInput();
+            }
+        });
+        syncInput();
+    }
+
+    document.querySelectorAll('select.searchable-filter').forEach(initSearchableSelect);
+
+    function resetSearchableSelect(id) {
+        searchableSelects.get(id)?.setValue('');
+    }
+
+    // 页面加载完成后设置默认时间范围
+    window.addEventListener('DOMContentLoaded', function() {
+        // 设置默认时间范围为最近24小时
+        const now = new Date();
+        const startTime = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+        // 格式化时间为本地时间字符串
+        document.getElementById('filter-start-time').value = toLocalISOString(startTime);
+        document.getElementById('filter-end-time').value = toLocalISOString(now);
+
+        loadRecords(1)
+    });
+
+    // 将Date对象转换为本地ISO字符串格式
+    function toLocalISOString(date) {
+        const offset = date.getTimezoneOffset();
+        const localDate = new Date(date.getTime() - offset * 60000);
+        return localDate.toISOString().slice(0, 16);
+    }
+
+    // 应用筛选条件
+    function applyFilter() {
+        loadRecords(1);
+    }
+
+    // 重置筛选条件
+    function resetFilter() {
+        document.getElementById('filter-start-time').value = '';
+        document.getElementById('filter-end-time').value = '';
+        resetSearchableSelect('filter-camera');
+        resetSearchableSelect('filter-group');
+        loadRecords(1);
+    }
+
+    // 加载记录
+    function loadRecords(page) {
+        const startTime = document.getElementById('filter-start-time').value;
+        const endTime = document.getElementById('filter-end-time').value;
+        const cameraId = document.getElementById('filter-camera').value;
+        const group = document.getElementById('filter-group').value;
+
+        // 构建查询参数
+        const params = new URLSearchParams();
+        params.append('page', page);
+        if (startTime) params.append('start_time', startTime);
+        if (endTime) params.append('end_time', endTime);
+        if (cameraId) params.append('camera_id', cameraId);
+        if (group) params.append('group', group);
+
+        // 发送请求
+        fetch('/recognitions/list?' + params.toString())
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    updateTable(data.data.records||[]);
+                    updatePagination(data.data.current_page, data.data.total_pages);
+                    window.currentPage = data.data.current_page;
+                    window.totalPages = data.data.total_pages;
+                } else {
+                    alert('获取数据失败: ' + (data.error || '未知错误'));
+                }
+            })
+            .catch(error => {
+                console.error('获取数据失败:', error);
+                alert('获取数据失败: ' + error.message);
+            });
+    }
+
+    // 更新表格内容
+    function updateTable(records) {
+        const tbody = document.getElementById('records-table-body');
+        tbody.innerHTML = '';
+
+        if (records.length === 0) {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td colspan="8">
+                    <div class="empty-state">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 1.79 4 4 4h8c2.21 0 4-1.79 4-4V7M4 7c0-2.21 1.79-4 4-4h8c2.21 0 4 1.79 4 4M4 7h16m-9 4h2m-4 4h6"></path>
+                        </svg>
+                        <p>没有找到匹配的记录</p>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(row);
+            return;
+        }
+
+        records.forEach(record => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${record.Id}</td>
+                <td>${record.CameraName || '未知设备'}</td>
+                <td>${formatDateTime(record.AddTime)}</td>
+                <td>
+                    ${record.Warning ?
+                      '<span class="status-badge status-warning">告警</span>' :
+                      '<span class="status-badge status-normal">正常</span>'}
+                </td>
+                <td>${record.WebAuditeDisplay}</td>
+                <td>${record.DescribeDisplay || ''}</td>
+                <td>
+                    ${record.ImgPath ?
+                      `<img src="/recognition/${record.Id}/image" alt="识别图片" class="preview-image" onclick="showImageModal(${record.Id})" title="点击预览原图">` :
+                      '无图片'}
+                </td>
+                <td class="actions">
+                    <a href="/recognition/${record.Id}" class="btn btn-primary" target="_blank">详情</a>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+
+    // 更新分页控件
+    function updatePagination(currentPage, totalPages) {
+        // 更新全局变量
+        window.currentPage = currentPage;
+        window.totalPages = totalPages;
+
+        const pagination = document.getElementById('pagination');
+        pagination.innerHTML = `
+            <button id="prev-page" onclick="changePage(${currentPage - 1})" ${currentPage <= 1 ? 'disabled' : ''}>上一页</button>
+            <span class="current-page">第 ${currentPage} 页，共 ${totalPages} 页</span>
+            <button id="next-page" onclick="changePage(${currentPage + 1})" ${currentPage >= totalPages ? 'disabled' : ''}>下一页</button>
+        `;
+    }
+
+    // 切换页面
+    function changePage(page) {
+        if (page >= 1 && page <= window.totalPages) {
+            loadRecords(page);
+        }
+    }
+
+    // 格式化日期时间
+    function formatDateTime(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleString('zh-CN');
+    }
+
+    // 显示图片模态框
+    function showImageModal(recordId) {
+        const modal = document.getElementById('imageModal');
+        const fullImage = document.getElementById('fullImage');
+        const originalUrl = `/recognition/${recordId}/image`;
+        fullImage.src = originalUrl;
+        document.getElementById('viewOriginal').href = originalUrl;
+        document.getElementById('downloadOriginal').href = `${originalUrl}?download=1`;
+        modal.style.display = 'block';
+    }
+
+    // 关闭图片模态框
+    function closeImageModal() {
+        const modal = document.getElementById('imageModal');
+        modal.style.display = 'none';
+        document.getElementById('fullImage').src = '';
+    }
+
+    // 点击模态框外部关闭
+    window.onclick = function(event) {
+        const imageModal = document.getElementById('imageModal');
+        if (event.target === imageModal) {
+            closeImageModal();
+        }
+    }
+
+    // 导出识别记录
+    function exportRecognitionRecords() {
+        // 获取当前筛选条件
+        const startTime = document.getElementById('filter-start-time').value;
+        const endTime = document.getElementById('filter-end-time').value;
+        const cameraId = document.getElementById('filter-camera').value;
+        const group = document.getElementById('filter-group').value;
+
+        // 构建导出URL
+        const params = new URLSearchParams();
+        if (startTime) params.append('start_time', startTime);
+        if (endTime) params.append('end_time', endTime);
+        if (cameraId) params.append('camera_id', cameraId);
+        if (group) params.append('group', group);
+        params.append('export', 'excel');
+
+        // 下载文件
+        window.location.href = '/recognitions/list?' + params.toString();
+    }
+</script>
+</body>
+</html>

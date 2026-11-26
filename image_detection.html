@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>上传图片检测</title>
+    <style>
+        :root {
+            --bg: #f2f3f5;
+            --surface: #fff;
+            --surface-alt: #f8f9fb;
+            --border: #e5e7eb;
+            --border-strong: #d7dae0;
+            --text: #1f2430;
+            --text-secondary: #6b7280;
+            --primary: #232a3d;
+            --primary-hover: #171c2a;
+            --success: #2f6f4e;
+            --danger: #b3261e;
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+            --shadow-md: 0 12px 32px rgba(16, 24, 40, .10);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            padding: 32px 20px;
+            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            color: var(--text);
+            background: var(--bg);
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            background: var(--surface);
+            box-shadow: var(--shadow-md);
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 28px 40px;
+            color: #fff;
+            background: var(--primary);
+        }
+
+        .header h1 { margin: 0 0 6px; font-size: 21px; }
+        .header p { margin: 0; color: rgba(255,255,255,.65); font-size: 13px; }
+        .nav { display: flex; gap: 10px; flex-wrap: wrap; }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 38px;
+            padding: 8px 18px;
+            border: 1px solid transparent;
+            border-radius: var(--radius-sm);
+            font-size: 13.5px;
+            font-weight: 500;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .btn-primary { color: #fff; background: var(--primary); }
+        .btn-primary:hover { background: var(--primary-hover); }
+        .btn-light { color: #fff; border-color: rgba(255,255,255,.35); background: transparent; }
+        .btn-light:hover { background: rgba(255,255,255,.1); }
+        .btn:disabled { opacity: .55; cursor: not-allowed; }
+
+        .content { padding: 32px 40px 40px; }
+        .grid { display: grid; grid-template-columns: minmax(280px, 360px) minmax(0, 1fr); gap: 28px; }
+
+        .card {
+            padding: 22px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            background: var(--surface-alt);
+        }
+
+        .card-title { margin: 0 0 18px; font-size: 15px; }
+        .form-group { margin-bottom: 17px; }
+        .form-group label { display: block; margin-bottom: 7px; color: var(--text-secondary); font-size: 13px; font-weight: 500; }
+
+        input, select {
+            width: 100%;
+            height: 40px;
+            padding: 8px 11px;
+            border: 1px solid var(--border-strong);
+            border-radius: var(--radius-sm);
+            color: var(--text);
+            background: #fff;
+            font-size: 13.5px;
+        }
+
+        input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(35,42,61,.08); }
+        input[type="file"] { height: auto; padding: 10px; }
+        .help { margin: 7px 0 0; color: var(--text-secondary); font-size: 12px; line-height: 1.5; }
+        .submit { width: 100%; margin-top: 4px; }
+
+        .preview-panel { min-height: 300px; }
+        .preview-placeholder {
+            display: flex;
+            min-height: 280px;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+
+        .image-preview {
+            display: none;
+            width: auto;
+            height: auto;
+            max-width: 100%;
+            max-height: 520px;
+            margin: 0 auto;
+            object-fit: contain;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: #fff;
+        }
+
+        .image-meta { display: none; margin-top: 12px; color: var(--text-secondary); text-align: center; font-size: 12px; }
+        .result { display: none; margin-top: 28px; }
+        .result-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+        .result-header h2 { margin: 0; font-size: 16px; }
+        .status { padding: 4px 10px; border-radius: 999px; color: var(--text-secondary); background: #eceef2; font-size: 12px; }
+        .status.success { color: var(--success); background: #eaf6ef; }
+        .status.error { color: var(--danger); background: #fdecea; }
+
+        .result-summary {
+            padding: 20px 22px;
+            border: 1px solid var(--border);
+            border-left-width: 5px;
+            border-radius: var(--radius-md);
+            background: var(--surface-alt);
+        }
+
+        .result-summary.normal {
+            border-left-color: var(--success);
+            background: #f1f8f4;
+        }
+
+        .result-summary.abnormal,
+        .result-summary.error {
+            border-left-color: var(--danger);
+            background: #fff5f4;
+        }
+
+        .result-summary.pending,
+        .result-summary.unknown {
+            border-left-color: var(--text-secondary);
+        }
+
+        .result-conclusion {
+            font-size: 22px;
+            font-weight: 650;
+        }
+
+        .result-summary.normal .result-conclusion { color: var(--success); }
+        .result-summary.abnormal .result-conclusion,
+        .result-summary.error .result-conclusion { color: var(--danger); }
+
+        .result-description {
+            margin-top: 7px;
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+
+        .result-description:empty { display: none; }
+
+        .result-details {
+            margin-top: 14px;
+        }
+
+        .result-details summary {
+            width: fit-content;
+            color: var(--text-secondary);
+            font-size: 13px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .result-details pre {
+            margin-top: 10px;
+        }
+
+        pre {
+            max-height: 420px;
+            overflow: auto;
+            margin: 0;
+            padding: 16px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: #e5e7eb;
+            background: #1f2430;
+            font: 12.5px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        #resultImage { margin: 18px auto 0; }
+
+        @media (max-width: 800px) {
+            body { padding: 16px 10px; }
+            .header { align-items: flex-start; padding: 22px; flex-direction: column; }
+            .content { padding: 22px; }
+            .grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header class="header">
+        <div>
+            <h1>上传图片检测</h1>
+            <p>上传现场图片，调用灾害检测服务进行即时检查</p>
+        </div>
+        <nav class="nav">
+            <a class="btn btn-light" href="/">配置管理</a>
+            <a class="btn btn-light" href="/recognitions">识别记录</a>
+        </nav>
+    </header>
+
+    <main class="content">
+        <div class="grid">
+            <form id="detectionForm" class="card">
+                <h2 class="card-title">检测参数</h2>
+                <div class="form-group">
+                    <label for="cameraCode">摄像头编码</label>
+                    <input id="cameraCode" name="camera_code" value="test_camera_001" maxlength="100" required>
+                </div>
+                <div class="form-group">
+                    <label for="eventType">事件类型</label>
+                    <select id="eventType" name="event_type">
+                        <option value="landslide">滑坡（landslide）</option>
+                        <option value="collapse">坍塌（collapse）</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="imageFile">检测图片</label>
+                    <input id="imageFile" name="image" type="file" accept="image/*" required>
+                    <p class="help">支持常见图片格式，单张图片不超过 20MB。</p>
+                </div>
+                <button id="submitButton" class="btn btn-primary submit" type="submit">开始检测</button>
+            </form>
+
+            <section class="card preview-panel">
+                <h2 class="card-title">待检测图片</h2>
+                <div id="previewPlaceholder" class="preview-placeholder">选择图片后将在这里预览</div>
+                <img id="imagePreview" class="image-preview" alt="待检测图片">
+                <div id="imageMeta" class="image-meta"></div>
+            </section>
+        </div>
+
+        <section id="result" class="result">
+            <div class="result-header">
+                <h2>检测结果</h2>
+                <span id="resultStatus" class="status"></span>
+            </div>
+            <div id="resultSummary" class="result-summary pending">
+                <div id="resultConclusion" class="result-conclusion"></div>
+                <div id="resultDescription" class="result-description"></div>
+            </div>
+            <details id="resultDetails" class="result-details">
+                <summary>查看原始 JSON 详情</summary>
+                <pre id="resultContent"></pre>
+            </details>
+            <img id="resultImage" class="image-preview" alt="检测结果图片">
+        </section>
+    </main>
+</div>
+
+<script>
+    const form = document.getElementById('detectionForm');
+    const imageFile = document.getElementById('imageFile');
+    const preview = document.getElementById('imagePreview');
+    const previewPlaceholder = document.getElementById('previewPlaceholder');
+    const imageMeta = document.getElementById('imageMeta');
+    const submitButton = document.getElementById('submitButton');
+    const result = document.getElementById('result');
+    const resultStatus = document.getElementById('resultStatus');
+    const resultSummary = document.getElementById('resultSummary');
+    const resultConclusion = document.getElementById('resultConclusion');
+    const resultDescription = document.getElementById('resultDescription');
+    const resultDetails = document.getElementById('resultDetails');
+    const resultContent = document.getElementById('resultContent');
+    const resultImage = document.getElementById('resultImage');
+    let previewUrl = '';
+
+    const initialParams = new URLSearchParams(window.location.search);
+    const initialCameraCode = initialParams.get('camera_code');
+    const initialEventType = initialParams.get('event_type');
+    if (initialCameraCode) {
+        document.getElementById('cameraCode').value = initialCameraCode;
+    }
+    if (initialEventType === 'landslide' || initialEventType === 'collapse') {
+        document.getElementById('eventType').value = initialEventType;
+    }
+
+    imageFile.addEventListener('change', () => {
+        const file = imageFile.files[0];
+        if (previewUrl) URL.revokeObjectURL(previewUrl);
+        previewUrl = '';
+        preview.removeAttribute('src');
+        preview.style.display = 'none';
+        imageMeta.style.display = 'none';
+        previewPlaceholder.style.display = 'flex';
+        if (!file) return;
+
+        previewUrl = URL.createObjectURL(file);
+        preview.src = previewUrl;
+        preview.style.display = 'block';
+        previewPlaceholder.style.display = 'none';
+        imageMeta.textContent = `${file.name} · ${formatFileSize(file.size)}`;
+        imageMeta.style.display = 'block';
+    });
+
+    form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const file = imageFile.files[0];
+        if (!file) return;
+        if (file.size > 20 * 1024 * 1024) {
+            showResult(false, {error: '图片大小不能超过 20MB'});
+            return;
+        }
+
+        submitButton.disabled = true;
+        submitButton.textContent = '检测中…';
+        result.style.display = 'block';
+        resultStatus.className = 'status';
+        resultStatus.textContent = '请求中';
+        resultSummary.className = 'result-summary pending';
+        resultConclusion.textContent = '正在检测…';
+        resultDescription.textContent = '正在上传图片并等待检测服务返回';
+        resultDetails.style.display = 'none';
+        resultImage.style.display = 'none';
+        resultImage.removeAttribute('src');
+
+        try {
+            const response = await fetch('/api/image-detection', {
+                method: 'POST',
+                body: new FormData(form)
+            });
+            const text = await response.text();
+            let data;
+            try {
+                data = JSON.parse(text);
+            } catch (_) {
+                data = {message: text || `检测服务返回 HTTP ${response.status}`};
+            }
+            showResult(response.ok, data);
+        } catch (error) {
+            showResult(false, {error: error.message});
+        } finally {
+            submitButton.disabled = false;
+            submitButton.textContent = '开始检测';
+        }
+    });
+
+    function showResult(success, data) {
+        const conclusion = getDetectionConclusion(success, data);
+
+        result.style.display = 'block';
+        const statusClass = conclusion.type === 'abnormal' || conclusion.type === 'error' ? 'error' : 'success';
+        resultStatus.className = `status ${statusClass}`;
+        resultStatus.textContent = conclusion.status;
+        resultSummary.className = `result-summary ${conclusion.type}`;
+        resultConclusion.textContent = conclusion.text;
+        resultDescription.textContent = conclusion.description;
+        resultDetails.style.display = 'block';
+        resultDetails.open = false;
+        resultContent.textContent = JSON.stringify(data, (key, value) => {
+            if (typeof value === 'string' && value.length > 500 && looksLikeBase64(value)) {
+                return `[图片 Base64，长度 ${value.length}]`;
+            }
+            return value;
+        }, 2);
+
+        const imageData = findResultImage(data);
+        if (imageData) {
+            resultImage.src = toImageDataUrl(imageData);
+            resultImage.style.display = 'block';
+        } else {
+            resultImage.style.display = 'none';
+            resultImage.removeAttribute('src');
+        }
+        result.scrollIntoView({behavior: 'smooth', block: 'start'});
+    }
+
+    function getDetectionConclusion(success, responseData) {
+        if (!success) {
+            const description = responseData && (responseData.error || responseData.message);
+            return {
+                type: 'error',
+                status: '检测失败',
+                text: '检测失败',
+                description: description || '检测服务请求失败，请查看原始返回详情'
+            };
+        }
+
+        const detectionData = responseData && responseData.data;
+        if (!detectionData || typeof detectionData.abnormal !== 'boolean') {
+            return {
+                type: 'unknown',
+                status: '检测完成',
+                text: '未获取到明确结论',
+                description: '返回内容中缺少异常判断，请查看原始 JSON 详情'
+            };
+        }
+
+        if (!detectionData.abnormal) {
+            return {
+                type: 'normal',
+                status: '检测完成',
+                text: '无异常',
+                description: ''
+            };
+        }
+
+        const eventLabels = {
+            landslide: '滑坡',
+            collapse: '坍塌',
+            normal: '正常'
+        };
+        const eventName = eventLabels[detectionData.event] || detectionData.event || '未知';
+        return {
+            type: 'abnormal',
+            status: '发现异常',
+            text: '识别到异常',
+            description: `异常类型：${eventName}`
+        };
+    }
+
+    function findResultImage(data) {
+        if (!data || typeof data !== 'object') return '';
+        const keys = ['result_image', 'result_pic_base64', 'image_base64', 'annotated_image', 'pic_base64'];
+        for (const key of keys) {
+            if (typeof data[key] === 'string' && (data[key].startsWith('data:image/') || looksLikeBase64(data[key]))) {
+                return data[key];
+            }
+        }
+        for (const value of Object.values(data)) {
+            const found = findResultImage(value);
+            if (found) return found;
+        }
+        return '';
+    }
+
+    function toImageDataUrl(value) {
+        if (value.startsWith('data:image/')) return value;
+        let mimeType = 'image/jpeg';
+        if (value.startsWith('iVBOR')) mimeType = 'image/png';
+        else if (value.startsWith('R0lGOD')) mimeType = 'image/gif';
+        else if (value.startsWith('UklGR')) mimeType = 'image/webp';
+        return `data:${mimeType};base64,${value}`;
+    }
+
+    function looksLikeBase64(value) {
+        const raw = value.startsWith('data:image/') ? value.substring(value.indexOf(',') + 1) : value;
+        return raw.length > 100 && /^[A-Za-z0-9+/=\r\n]+$/.test(raw.substring(0, Math.min(raw.length, 300)));
+    }
+
+    function formatFileSize(bytes) {
+        if (bytes < 1024) return `${bytes} B`;
+        if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+        return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+    }
+</script>
+</body>
+</html>

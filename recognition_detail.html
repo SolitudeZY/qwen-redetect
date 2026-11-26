@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>识别记录详情</title>
+    <style>
+        :root {
+            --bg: #f2f3f5;
+            --surface: #ffffff;
+            --surface-alt: #f8f9fb;
+            --border: #e5e7eb;
+            --border-strong: #d7dae0;
+            --text: #1f2430;
+            --text-secondary: #6b7280;
+            --text-muted: #9aa1ac;
+            --primary: #232a3d;
+            --primary-hover: #171c2a;
+            --success: #2f6f4e;
+            --success-hover: #255a3f;
+            --danger: #b3261e;
+            --danger-hover: #8f1f19;
+            --danger-bg: #fdecea;
+            --warning: #b7791f;
+            --warning-bg: #fbf1e0;
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+            --shadow-md: 0 12px 32px rgba(16, 24, 40, .10);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 32px 20px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+        }
+
+        .header {
+            background: var(--primary);
+            padding: 28px 40px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 600;
+            letter-spacing: .3px;
+            margin-bottom: 6px;
+        }
+
+        .header p {
+            color: rgba(255, 255, 255, .6);
+            font-size: 13px;
+        }
+
+        .content {
+            padding: 32px 40px;
+        }
+
+        .detail-card {
+            background: var(--surface-alt);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .detail-title {
+            font-size: 12.5px;
+            font-weight: 600;
+            letter-spacing: .5px;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .detail-item {
+            display: flex;
+            margin-bottom: 4px;
+            padding: 8px 0;
+        }
+
+        .detail-label {
+            font-weight: 500;
+            min-width: 120px;
+            color: var(--text-secondary);
+            font-size: 13.5px;
+        }
+
+        .detail-value {
+            flex: 1;
+            color: var(--text);
+            font-size: 13.5px;
+        }
+
+        .image-container {
+            text-align: center;
+            margin: 4px 0;
+        }
+
+        .detail-image {
+            display: block;
+            width: auto;
+            height: auto;
+            max-width: 100%;
+            max-height: 400px;
+            object-fit: contain;
+            margin: 0 auto;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+        }
+
+        .image-actions {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 3px 11px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-warning {
+            background: var(--warning-bg);
+            color: var(--warning);
+        }
+
+        .status-normal {
+            background: #eaf6ef;
+            color: #1f8a4c;
+        }
+
+        .status-audited-true {
+            background: #eaf6ef;
+            color: #1f8a4c;
+        }
+
+        .status-audited-false {
+            background: var(--danger-bg);
+            color: var(--danger);
+        }
+
+        .status-audited-null {
+            background: var(--warning-bg);
+            color: var(--warning);
+        }
+
+        .audit-section {
+            background: var(--surface-alt);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 24px;
+            margin-top: 20px;
+        }
+
+        .alert-warning-box {
+            background: var(--warning-bg);
+            border-left: 3px solid var(--warning);
+            border-radius: var(--radius-sm);
+            padding: 12px 16px;
+            font-size: 13.5px;
+            color: #7a5511;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .form-group select,
+        .form-group input {
+            padding: 9px 12px;
+            border: 1px solid var(--border-strong);
+            border-radius: var(--radius-sm);
+            font-size: 13.5px;
+            background: white;
+            color: var(--text);
+        }
+
+        .form-group select:focus,
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(35, 42, 61, .08);
+        }
+
+        .btn {
+            padding: 10px 22px;
+            border: 1px solid transparent;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 13.5px;
+            font-weight: 500;
+            transition: background .15s ease, border-color .15s ease, color .15s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: var(--success-hover);
+        }
+
+        .btn-danger {
+            background: white;
+            color: var(--danger);
+            border-color: #f0d4d1;
+        }
+
+        .btn-danger:hover {
+            background: var(--danger-bg);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-start;
+            margin-top: 20px;
+        }
+
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+            }
+
+            .header, .content {
+                padding: 20px;
+            }
+
+            .detail-item {
+                flex-direction: column;
+                gap: 4px;
+            }
+
+            .detail-label {
+                min-width: auto;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>识别记录详情</h1>
+        <p>查看和审核AI识别记录</p>
+    </div>
+
+    <div class="content">
+        <!-- 基本信息 -->
+        <div class="detail-card">
+            <div class="detail-title">基本信息</div>
+            <div class="detail-item">
+                <div class="detail-label">记录ID:</div>
+                <div class="detail-value">{{.Record.Id}}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">识别时间:</div>
+                <div class="detail-value">{{.Record.AddTime.Format "2006-01-02 15:04:05"}}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">大模型复核:</div>
+                <div class="detail-value">
+                    {{if .Record.WebWarning}}
+                    <span class="status-badge status-warning">告警</span>
+                    {{else}}
+                    <span class="status-badge status-normal">正常</span>
+                    {{end}}
+                </div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">审核状态:</div>
+                <div class="detail-value">
+                    {{if not .Record.WebAudited}}
+                    <span class="status-badge status-audited-null">未审核</span>
+                    {{else if .Record.WebAuditeResult}}
+                    <span class="status-badge status-audited-true">已审核(通过)</span>
+                    {{else}}
+                    <span class="status-badge status-audited-false">已审核(不通过)</span>
+                    {{end}}
+                </div>
+            </div>
+            {{if .Record.AuditTime}}
+            <div class="detail-item">
+                <div class="detail-label">审核时间:</div>
+                <div class="detail-value">{{.Record.AuditTime.Format "2006-01-02 15:04:05"}}</div>
+            </div>
+            {{end}}
+            {{if .Record.AuditUser}}
+            <div class="detail-item">
+                <div class="detail-label">审核人:</div>
+                <div class="detail-value">{{.Record.AuditUser}}</div>
+            </div>
+            {{end}}
+        </div>
+
+        <!-- 设备信息 -->
+        <div class="detail-card">
+            <div class="detail-title">设备信息</div>
+            <div class="detail-item">
+                <div class="detail-label">设备名称:</div>
+                <div class="detail-value">{{.Camera.Name}}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">设备类型:</div>
+                <div class="detail-value">{{.Camera.Type}}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">序列号:</div>
+                <div class="detail-value">{{.Camera.SerialNo}}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">点位名称:</div>
+                <div class="detail-value">{{.Camera.DeviceName}}</div>
+            </div>
+        </div>
+
+        <!-- 描述信息 -->
+        {{if .Record.Describe}}
+        <div class="detail-card">
+            <div class="detail-title">大模型诊断结果</div>
+            <div class="detail-value" style="white-space: pre-wrap; line-height: 1.6;">
+                {{.Record.Describe}}
+            </div>
+        </div>
+        {{end}}
+
+        <!-- 图片 -->
+        {{if .Record.ImgPath}}
+        <div class="detail-card">
+            <div class="detail-title">识别图片</div>
+            <div class="image-container">
+                <a href="/recognition/{{.Record.Id}}/image" target="_blank" rel="noopener" title="点击查看原图">
+                    <img src="/recognition/{{.Record.Id}}/image" alt="识别图片" class="detail-image">
+                </a>
+                <div class="image-actions">
+                    <a href="/recognition/{{.Record.Id}}/image" class="btn btn-primary" target="_blank" rel="noopener">查看原图</a>
+                    <a href="/recognition/{{.Record.Id}}/image?download=1" class="btn btn-success">下载原图</a>
+                </div>
+            </div>
+        </div>
+        {{end}}
+
+        {{if not .Record.WebAudited}}
+        <!-- 审核表单 -->
+        <div class="audit-section">
+            <div class="detail-title">审核操作</div>
+            <form id="auditForm">
+                <input type="hidden" id="recordId" value="{{.Record.Id}}">
+                <!-- 新增 警示标签 -->
+                <div class="alert-warning-box">
+                    审核通过后，灾害情报将上报至省级平台，请谨慎操作。
+                </div>
+                <div class="form-group">
+                    <label for="auditUser">审核人:</label>
+                    <input type="text" id="auditUser" placeholder="请输入审核人姓名">
+                </div>
+                <div class="action-buttons">
+                    <button type="button" class="btn btn-success" onclick="submitAudit(true)">审核通过</button>
+                    <button type="button" class="btn btn-danger" onclick="submitAudit(false)">审核不通过</button>
+                </div>
+            </form>
+        </div>
+        {{end}}
+    </div>
+</div>
+
+<script>
+    function submitAudit(audited) {
+        const recordId = document.getElementById('recordId').value;
+        const auditUser = document.getElementById('auditUser').value;
+        const auditStatus = audited.toString();
+
+        // 如果没有输入审核人，使用默认值
+        const user = auditUser || '系统用户';
+
+        // 发送审核请求
+        fetch(`/recognition/${recordId}/audit`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `audited=${auditStatus}&audit_user=${encodeURIComponent(user)}`
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('审核成功！');
+                    // 重新加载页面以显示更新后的状态
+                    location.reload();
+                } else {
+                    alert('审核失败: ' + (data.error || '未知错误'));
+                }
+            })
+            .catch(error => {
+                console.error('审核请求失败:', error);
+                alert('审核请求失败: ' + error.message);
+            });
+    }
+
+    // 移动端优化：检测屏幕尺寸并调整布局
+    function adjustForMobile() {
+        if (window.innerWidth <= 768) {
+            document.body.style.padding = '10px';
+        }
+    }
+
+    // 页面加载完成后执行
+    window.addEventListener('DOMContentLoaded', function () {
+        adjustForMobile();
+    });
+
+    // 监听窗口大小变化
+    window.addEventListener('resize', adjustForMobile);
+</script>
+</body>
+</html>

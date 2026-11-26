@@ -1,0 +1,103 @@
+; ============================================================
+; Qwen-Redetect 配置模板
+;
+; 使用方法：
+;   cp conf.ini.example conf.ini
+;   按实际环境把下面的占位符替换为真实值。
+;
+; 注意：conf.ini 已被 .gitignore 忽略，请勿把真实凭据提交进仓库。
+;       本文件中的值全部为占位符，仅用于说明配置结构。
+; ============================================================
+
+[db]
+; 业务数据库（PostgreSQL），识别记录/摄像头任务/告警记录都存这里
+dsn = postgres://postgres:CHANGE_ME@127.0.0.1:5432/aicracker?sslmode=disable
+; iOTA 控制台数据库连接（本模块当前未读取该键，可留空）
+iota = postgres://postgres:CHANGE_ME@127.0.0.1:5432/iOTA_console?sslmode=disable
+
+[redis]
+; 预留配置，本模块未读取，可留空
+host =
+
+[web]
+; 预留配置：StartWeb() 固定监听 :8080，本键当前不生效，仅作记录
+url = :8080
+
+[qiniu]
+; 七牛对象存储：告警图片上传（由 base 公共库 utils.SavePicBytesTo7n 读取）
+zone = z0
+access = YOUR_QINIU_ACCESS_KEY
+secret = YOUR_QINIU_SECRET_KEY
+bucket = your-bucket
+url = https://your-cdn.example.com
+
+[luan]
+; 河北路安平台图片上报接口
+url = https://your-luan-api.example.com/ims/api
+user = YOUR_LUAN_USER
+pwd = YOUR_LUAN_PASSWORD
+
+[sxgb]
+; 山西省 AI 摄像头接入平台（国标流播放地址）
+; 密码以平台 SM2 公钥加密后传输，明文仅保存在本地 conf.ini
+url = https://your-sxgb-platform.example.com
+username = YOUR_SXGB_USERNAME
+password = YOUR_SXGB_PASSWORD
+; 播放地址刷新周期（分钟），默认 3
+interval_min = 3
+
+[ai]
+; FastGPT / DashScope 视觉大模型服务地址与 Key（由 base 公共库 utils.AiAli 读取）
+url = https://your-fastgpt.example.com
+key = YOUR_FASTGPT_KEY
+
+[recognize]
+; 大模型（每 big_check_interval_min 分钟复核一次用）
+; 必须使用视觉模型（如 qwen-vl-max / qwen-vl-plus），纯文本模型会返回 400
+big_model = qwen-vl-max
+; 日常轻量视觉模型
+lite_model = qwen3-vl-flash
+; 大模型复核间隔（分钟）
+big_check_interval_min = 60
+; 告警时是否上传七牛，1 开 / 0 关，默认 1
+; use_qiniu = 1
+; 本地图片保存目录，默认 images
+; image_dir = images
+; 本地图片对外 URL 前缀，默认 https://your-image-host.example.com/images
+; image_url = https://your-image-host.example.com/images
+; 本地图片保留天数，默认 60
+; image_retention_days = 60
+
+[detect]
+; 单图检测服务地址（[GET /image-detection] 上传图片时调用）
+url = http://127.0.0.1:9090/detect
+
+; ------------------------------------------------------------
+; 以下配置节在代码中通过 GetStringDefault/GetIntDefault 读取，
+; 缺省时使用代码内默认值；生产环境请显式配置。
+; ------------------------------------------------------------
+
+; [hikisc]
+; 海康 ISC Artemis 平台（AK/SK 用于 x-ca-* HMAC 签名）
+; ak = YOUR_HIK_APP_KEY
+; sk = YOUR_HIK_APP_SECRET
+; ip = 10.0.0.1
+; port = 10443
+; is_https = 1
+
+; [ys]
+; 萤石云开放平台默认 AppKey/AppSecret（单摄像头也可在 web 配置中指定独立密钥）
+; ak = YOUR_YS_APP_KEY
+; sk = YOUR_YS_APP_SECRET
+
+; [mqtt]
+; 告警/事件推送的 MQTT Broker
+; url = tcp://mqtt.example.com:1883
+
+; [notify]
+; 告警通知方式：email（邮件）或 wx（企业微信）
+; type = email
+
+; [wx]
+; 企业微信通知接收人
+; notify = your-wecom-user

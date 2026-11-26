@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>识别历史记录</title>
+    <style>
+        :root {
+            --bg: #f2f3f5;
+            --surface: #ffffff;
+            --surface-alt: #f8f9fb;
+            --border: #e5e7eb;
+            --border-strong: #d7dae0;
+            --text: #1f2430;
+            --text-secondary: #6b7280;
+            --text-muted: #9aa1ac;
+            --primary: #232a3d;
+            --primary-hover: #171c2a;
+            --warning: #b7791f;
+            --warning-bg: #fbf1e0;
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+            --shadow-md: 0 12px 32px rgba(16, 24, 40, .10);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 32px 20px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+        }
+
+        .header {
+            background: var(--primary);
+            padding: 28px 40px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 600;
+            letter-spacing: .3px;
+        }
+
+        .header p {
+            color: rgba(255, 255, 255, .6);
+            font-size: 13px;
+            margin-top: 6px;
+        }
+
+        .content {
+            padding: 32px 40px;
+        }
+
+        .filter-section {
+            background: var(--surface-alt);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: flex-end;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-size: 12.5px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .form-group input {
+            padding: 9px 12px;
+            border: 1px solid var(--border-strong);
+            border-radius: var(--radius-sm);
+            font-size: 13.5px;
+            background: white;
+            color: var(--text);
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(35, 42, 61, .08);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            height: 38px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            accent-color: var(--primary);
+        }
+
+        .checkbox-group label {
+            font-size: 13.5px;
+            color: var(--text);
+            cursor: pointer;
+        }
+
+        .btn {
+            height: 38px;
+            padding: 0 20px;
+            border: 1px solid transparent;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 13.5px;
+            font-weight: 500;
+            background: var(--primary);
+            color: white;
+            transition: background .15s ease;
+        }
+
+        .btn:hover {
+            background: var(--primary-hover);
+        }
+
+        .table-container {
+            overflow-x: auto;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        th {
+            background: var(--surface-alt);
+            color: var(--text-secondary);
+            padding: 12px 14px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 13px 14px;
+            border-bottom: 1px solid var(--border);
+            font-size: 13.5px;
+            color: var(--text);
+        }
+
+        tr:hover td {
+            background: var(--surface-alt);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        td a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        td a:hover {
+            text-decoration: underline;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 3px 11px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-warning {
+            background: var(--warning-bg);
+            color: var(--warning);
+        }
+
+        .status-normal {
+            background: #eaf6ef;
+            color: #1f8a4c;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .pagination button {
+            padding: 8px 16px;
+            border: 1px solid var(--border-strong);
+            background: white;
+            color: var(--text);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 13px;
+            transition: border-color .15s ease, color .15s ease;
+        }
+
+        .pagination button:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        #pageInfo {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        img.preview {
+            width: auto;
+            height: auto;
+            max-width: min(500px, 80vw);
+            max-height: 300px;
+            object-fit: contain;
+            display: none;
+            position: absolute;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: white;
+            z-index: 9999;
+            box-shadow: var(--shadow-md);
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                padding: 20px;
+            }
+
+            .header {
+                padding: 20px;
+            }
+
+            .filter-section {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>识别记录历史</h1>
+        <p>摄像头 ID: {{.CameraID}}</p>
+    </div>
+
+    <div class="content">
+        <div class="filter-section">
+            <div class="form-group">
+                <label for="startTime">开始时间</label>
+                <input type="datetime-local" id="startTime">
+            </div>
+
+            <div class="form-group">
+                <label for="endTime">结束时间</label>
+                <input type="datetime-local" id="endTime">
+            </div>
+
+            <div class="checkbox-group">
+                <input type="checkbox" id="onlyWarning">
+                <label for="onlyWarning">仅显示告警记录</label>
+            </div>
+
+            <button class="btn" onclick="loadRecords(1)">查询</button>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                <tr>
+                    <th>时间</th>
+                    <th>图片</th>
+                    <th>描述</th>
+                    <th>告警</th>
+                </tr>
+                </thead>
+                <tbody id="recordsTable"></tbody>
+            </table>
+        </div>
+
+        <div class="pagination">
+            <button onclick="prevPage()">上一页</button>
+            <span id="pageInfo"></span>
+            <button onclick="nextPage()">下一页</button>
+        </div>
+    </div>
+</div>
+
+<img id="preview" class="preview">
+
+<script>
+    const cameraID = "{{.CameraID}}";
+    let currentPage = 1;
+    let totalPages = 1;
+
+    function loadRecords(page) {
+        const start = document.getElementById("startTime").value;
+        const end = document.getElementById("endTime").value;
+        const onlyWarning = document.getElementById("onlyWarning").checked;
+        fetch(`/camera-llm/${cameraID}/records?page=${page}&start=${start}&end=${end}&warning=${onlyWarning}`)
+            .then(resp => resp.json())
+            .then(data => {
+                const tbody = document.getElementById("recordsTable");
+                tbody.innerHTML = "";
+                for (const r of data.records) {
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+              <td>${new Date(r.AddTime).toLocaleString()}</td>
+              <td>
+                <a href="/recognition/${r.Id}/image" target="_blank" rel="noopener"
+                   onmouseover="showPreview(event, '/recognition/${r.Id}/image')"
+                   onmouseout="hidePreview()">
+                   查看原图
+                </a>
+                &nbsp;·&nbsp;
+                <a href="/recognition/${r.Id}/image?download=1">下载</a>
+              </td>
+              <td>${r.Describe || ""}</td>
+              <td>${r.Warning ? '<span class="status-badge status-warning">是</span>' : '<span class="status-badge status-normal">否</span>'}</td>`;
+                    tbody.appendChild(tr);
+                }
+                currentPage = data.page;
+                totalPages = Math.ceil(data.total / 10);
+                document.getElementById("pageInfo").innerText = `第 ${currentPage} 页，共 ${totalPages} 页`;
+            });
+    }
+
+    function prevPage() {
+        if (currentPage > 1) loadRecords(currentPage - 1);
+    }
+
+    function nextPage() {
+        if (currentPage < totalPages) loadRecords(currentPage + 1);
+    }
+
+    function showPreview(event, src) {
+        const img = document.getElementById("preview");
+        img.src = src;
+        img.style.left = event.pageX + 10 + "px";
+        img.style.top = event.pageY + 10 + "px";
+        img.style.display = "block";
+    }
+
+    function hidePreview() {
+        document.getElementById("preview").style.display = "none";
+    }
+
+    function toLocalISOString(date) {
+        const offset = date.getTimezoneOffset(); // 当前时区相对于 UTC 的分钟差
+        const localDate = new Date(date.getTime() - offset * 60000);
+        return localDate.toISOString().slice(0, 16);
+    }
+
+    // 默认加载最近一天
+    window.onload = () => {
+        const now = new Date();
+        const start = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        document.getElementById("startTime").value = toLocalISOString(start);
+        document.getElementById("endTime").value = toLocalISOString(now);
+        loadRecords(1);
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+# ---- 构建产物 ----
+*.exe
+*.test
+video-recognition
+
+# ---- 运行期数据 ----
+# 定时抓拍的样例/实拍图片（体积大，不入库）
+images/
+# 服务运行日志目录（含 handler/runtime）
+runtime/
+*.log
+
+# ---- 本地配置（含数据库口令、平台密钥等真实凭据，禁止提交）----
+conf.ini
+conf.ini.local
+*.local.ini
+
+# ---- 版本控制元数据 / IDE / 临时文件 ----
+.svn/
+.idea/
+.vscode/
+__pycache__/
+*.bak
+*.tmp
+*.swp
+.DS_Store
+Thumbs.db

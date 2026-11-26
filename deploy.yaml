@@ -1,0 +1,52 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: video-recognition
+  namespace: iot
+  labels:
+    app: video-recognition
+  annotations:
+    kubesphere.io/description: AI 摄像头大模型识别进程（河北）
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: video-recognition
+  template:
+    metadata:
+      labels:
+        app: video-recognition
+    spec:
+      volumes:
+        - name: volume-video-recognition
+          configMap:
+            name: cm-video-recognition
+            items:
+              - key: conf.ini
+                path: conf.ini
+            defaultMode: 420
+      containers:
+        - name: cantainer-video-recognition
+          image: 'registry.ngaiot.com/devops/video-recognition:1'
+          command:
+            - video-recognition
+          resources: {}
+          volumeMounts:
+            - name: volume-video-recognition
+              mountPath: /usr/local/bin/conf.ini
+              subPath: conf.ini
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          imagePullPolicy: IfNotPresent
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      securityContext: {}
+      schedulerName: default-scheduler
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600
