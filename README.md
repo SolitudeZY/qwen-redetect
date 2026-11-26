@@ -152,10 +152,11 @@ go build -o video-recognition main.go
 
 ### Docker 构建
 
-Dockerfile 与 Jenkins CI 保持一致，构建上下文需要同时包含 `base/` 与 `video-recognition/`：
+Dockerfile 与 Jenkins CI 保持一致，构建上下文需要同时包含 `base/` 与 `video-recognition/`；另外 Dockerfile 会 `COPY` 构建时的 `conf.ini` 进镜像，因此构建前需在 `video-recognition/` 下放好配置文件（不要把生产凭据打进公共镜像，建议改造成运行时挂载或由 ConfigMap 注入）：
 
 ```bash
 # 在 gowork/ 目录（包含 base 与 video-recognition）执行
+cp video-recognition/conf.ini.example video-recognition/conf.ini   # 填入真实配置
 docker build -f video-recognition/Dockerfile -t qwen-redetect:local .
 docker run --rm -p 8080:8080 \
   -v "$PWD/video-recognition/conf.ini:/usr/local/bin/conf.ini" \
@@ -271,6 +272,7 @@ docker run --rm -p 8080:8080 \
 ## 已知限制
 
 - **不能独立编译**：`go.mod` 通过 `replace base => ../base` 依赖未公开的公共库，缺少 `base/` 时 `go build` 会失败；Dockerfile 与 jenkinsfile 同样按"并排检出"设计。
+- **Dockerfile 依赖构建期 `conf.ini`**：原 Dockerfile 会把构建上下文中的 `conf.ini` 复制进镜像；公开仓库中该文件被忽略，本地构建前需自行放置（生产建议改为 ConfigMap/Secret 运行时注入，避免凭据进入镜像层）。
 - **样例数据未入库**：源目录中的 `images/`（157 张、约 60MB 运行期抓拍图）、`runtime/logs/`、`video-recognition*.exe`（构建产物）与 `.svn/` 元数据均被排除，仓库只保留源码与页面模板。
 - **测试非 hermetic**：`handler/*_test.go` 中部分用例需要访问海康 ISC、数据库、模型服务等内网环境，属于人工联调脚本；测试中的真实 AK/SK、内网 IP、预签名地址已替换为占位符。
 - **无内置鉴权**：Web 控制台与接口默认无登录鉴权，适合部署在内网或置于网关/反向代理之后。
